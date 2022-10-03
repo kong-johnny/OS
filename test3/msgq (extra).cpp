@@ -45,7 +45,7 @@ void CLIENT() {
 		msgsnd(msgqid, &msg, MSIZE, 0);
 		printf("(Client) sent %ld\n", msg.msgtype);
 		
-		sleep(1);
+		// sleep(0.1);
 		msgrcv(msgqid, &msg, MSIZE, 0, 0);
 		printf("%s", msg.msgtext);
 		times --;
