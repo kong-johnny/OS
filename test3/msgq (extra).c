@@ -1,4 +1,9 @@
+/*
+This program is used to explore produce working in different sleep time.
+*/
+
 #include<stdio.h>
+#include<stdlib.h>
 #include<sys/types.h>
 #include<unistd.h>
 #include<sys/wait.h>
@@ -14,13 +19,10 @@ struct msgbuff {
 }msg;
 int msgqid, times = 10;
 
-void change(int sig){
-	sig ++;
-}
 
 void SERVER() {
 	// lockf(1, 1, 0);
-	while( (msgqid = msgget(KEY, IPC_CREAT | 0777)) == -1);
+	msgqid = msgget(KEY, IPC_CREAT | 0777);
 	// lockf(1, 0, 0);
 	do {
 		// 如果mtype的值是零的话，函数将不做类型检查而自动返回队列中的最旧的消息
@@ -30,15 +32,15 @@ void SERVER() {
 		sprintf(msg.msgtext, "(Client) received from SERVER %d, type %ld\n", getpid(), msg.msgtype);
 		msgsnd(msgqid, &msg, MSIZE, 0);
 		printf("(Server) sent\n");
-		sleep(1);
+		// sleep(1);
 	}while(msg.msgtype != 1);
 	// 将队列从系统内核中删除。
 	msgctl(msgqid, IPC_RMID, 0);
-	_exit(0);
+	exit(0);
 }
 
 void CLIENT() {
-	while ( (msgqid = msgget(KEY, IPC_CREAT | 0777)) == -1);
+	msgqid = msgget(KEY, 0777);
 	do {
 		msg.msgtype = times;
 		sprintf(msg.msgtext, "(Server) received from CLIENT %d, type %ld\n", getpid(), msg.msgtype);
@@ -50,7 +52,7 @@ void CLIENT() {
 		printf("%s", msg.msgtext);
 		times --;
 	}while(times >= 1);
-	_exit(0);
+	exit(0);
 }
 
 int main(){
@@ -59,10 +61,12 @@ int main(){
 	if(pid1 == 0){
 		SERVER();
 	}
-	while((pid2 = fork()) == -1);
-	if(pid2 == 0){
-		CLIENT();
+	else{
+		while((pid2 = fork()) == -1);
+		if(pid2 == 0){
+			CLIENT();
+		}
+		else wait(0);
 	}
-	else wait(0);
 	return 0;
 }
